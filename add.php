@@ -1,3 +1,60 @@
+<?php
+
+    include 'DB/DB.php';
+
+    $q_question = "SELECT * FROM questions";
+    $stmt = $mysqli->query($q_question) or die($mysqli->error.__LINE__);
+    $totel = $stmt->num_rows;
+    $next = $totel+1;
+
+    if(isset($_POST['submit'])){
+        $question_num = $_POST['question_num'];
+        $question_text = $_POST['question_text'];
+
+        $q_questions = "INSERT INTO questions(question_num,question_text) VALUES ('$question_num','$question_text')";
+        $insert_row = $mysqli->query($q_questions) or die($mysqli->error.__LINE__);
+        echo "DONE INSERT QUESTIONS"; die();
+
+        $choices = array();
+        $choices[1] = $_POST['choice1'];
+        $choices[2] = $_POST['choice2'];
+        $choices[3] = $_POST['choice3'];
+
+        $correct_choice = $_POST['correct_choice'];
+        
+        //Validate insert
+        if($insert_row){
+            foreach($choices as $choice => $value){
+                if($value != ''){
+                    if($correct_choice == $choice){
+                        $is_correct = 1;
+                    }
+                    else{
+                        $is_correct = 0;
+                    }
+
+                    $q_choices = "INSERT INTO choices(question_num, is_correct, text) VALUES ('$question_num', '$is_correct', '$value')";
+
+                    $insert_row_choices = $mysqli->query($q_choices) or die($mysqli->error.__LINE__);
+                    
+                    //validate insert
+                    if($insert_row_choices){
+                        continue;
+                    }
+                    else{
+                        die('ERROR: (' . $mysqli->errno . ')' . $mysqli->error);
+                    }
+                }
+            }
+
+            $msg = "Question has been added";
+        }
+       
+   }
+
+   
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,10 +73,17 @@
     <main>
         <div class="container">
             <h2>Add A Question</h2>
+
+            <?php 
+                if(isset($msg)){
+                echo '<p>' . $msg . '</p>';
+                }
+            ?>
+
             <form action="add.php" method="post">
                 <p>
                     <label for="number">Question Number: </label>
-                    <input type="number" name="question_num">
+                    <input type="number"  value="<?php echo $next; ?>" name="question_num">
                 </p>
 
                 <p>
@@ -40,16 +104,6 @@
                 <p>
                     <label for="choice3">choice #3: </label>
                     <input type="text" name="choice3">
-                </p>
-
-                <p>
-                    <label for="choice4">choice #4: </label>
-                    <input type="text" name="choice4">
-                </p>
-
-                <p>
-                    <label for="choice5">choice #5: </label>
-                    <input type="text" name="choice5">
                 </p>
 
                 <p>
